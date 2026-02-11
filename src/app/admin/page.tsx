@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AddUserDialog } from '@/components/add-user-dialog';
 import { AddPropertyDialog } from '@/components/add-property-dialog';
 import { PropertyAssignmentModal } from '@/components/property-assignment-modal';
+import { isAfter, subMonths, parseISO } from 'date-fns';
 
 function SuperAdminDashboard() {
   const users = getAllUsers();
@@ -30,12 +31,27 @@ function SuperAdminDashboard() {
   const totalTickets = tickets.length;
   const totalProperties = properties.length;
   
-  const propertiesWithRevenue = properties.map((property) => ({
-    ...property,
-    revenue: tickets
-      .filter((ticket) => ticket.propertyId === property.id && ticket.status === 'Paid')
-      .reduce((acc, ticket) => acc + ticket.amount, 0),
-  }));
+  const now = new Date();
+  const propertiesWithRevenue = properties.map((property) => {
+    const propertyTickets = tickets.filter(
+      (ticket) => ticket.propertyId === property.id && ticket.status === 'Paid'
+    );
+    const revenue = propertyTickets.reduce((acc, ticket) => acc + ticket.amount, 0);
+
+    const getRevenueForPeriod = (months: number) =>
+      propertyTickets
+        .filter((ticket) => isAfter(parseISO(ticket.date), subMonths(now, months)))
+        .reduce((acc, ticket) => acc + ticket.amount, 0);
+    
+    return {
+      ...property,
+      revenue, // total revenue
+      revenue1m: getRevenueForPeriod(1),
+      revenue3m: getRevenueForPeriod(3),
+      revenue6m: getRevenueForPeriod(6),
+      revenue1y: getRevenueForPeriod(12),
+    };
+  });
 
   const handleEditAssignments = (user: User) => {
     if (user.role === 'Manager') {
