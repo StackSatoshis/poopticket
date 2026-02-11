@@ -9,15 +9,30 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Shield } from 'lucide-react';
 
+const MAX_FAILED_ATTEMPTS = 10;
+const BLOCK_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isBlocked) {
+      toast({
+        title: 'Too Many Login Attempts',
+        description: 'You are currently blocked. Please try again later.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     // Mock authentication
@@ -28,14 +43,31 @@ export default function LoginPage() {
         title: 'Login Successful',
         description: 'Redirecting to admin dashboard...',
       });
+      setFailedAttempts(0); // Reset on success
       router.push('/admin');
     } else {
-      toast({
-        title: 'Login Failed',
-        description: 'Invalid email or password. Please try again.',
-        variant: 'destructive',
-      });
+      const newAttemptCount = failedAttempts + 1;
+      setFailedAttempts(newAttemptCount);
       setIsLoading(false);
+
+      if (newAttemptCount >= MAX_FAILED_ATTEMPTS) {
+        setIsBlocked(true);
+        toast({
+          title: 'Too Many Failed Attempts',
+          description: `You have been locked out for ${BLOCK_DURATION_MS / 1000 / 60} minutes.`,
+          variant: 'destructive',
+        });
+        setTimeout(() => {
+          setIsBlocked(false);
+          setFailedAttempts(0);
+        }, BLOCK_DURATION_MS);
+      } else {
+        toast({
+          title: 'Login Failed',
+          description: `Invalid email or password. You have ${MAX_FAILED_ATTEMPTS - newAttemptCount} attempts remaining.`,
+          variant: 'destructive',
+        });
+      }
     }
   };
 
@@ -60,7 +92,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={isLoading || isBlocked}
               />
             </div>
             <div className="space-y-2">
@@ -72,15 +104,17 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={isLoading || isBlocked}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || isBlocked}>
                 {isLoading ? (
                     <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
                         Authenticating...
                     </>
+                ) : isBlocked ? (
+                    'Temporarily Blocked'
                 ) : 'Sign In'}
             </Button>
             <p className="text-xs text-center text-muted-foreground pt-2">
