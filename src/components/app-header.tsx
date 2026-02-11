@@ -48,7 +48,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="bg-card border-b shadow-sm">
+    <header className="bg-card border-b shadow-sm sticky top-0 z-40">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2 group">
@@ -59,7 +59,10 @@ export function AppHeader() {
               PoopTicket
             </h1>
           </Link>
-          <nav>
+          <nav className="flex items-center gap-4">
+            <Button asChild variant="ghost">
+              <Link href="/violations">Pay Citation</Link>
+            </Button>
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
