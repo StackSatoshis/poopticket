@@ -2,7 +2,7 @@ import { findTicket } from '@/lib/data';
 import type { Ticket } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle2, CircleAlert, Clock, CreditCard, DollarSign, FileText, LocateIcon, User, Car } from 'lucide-react';
+import { AlertCircle, CheckCircle2, CircleAlert, Clock, CreditCard, Dog, FileText, LocateIcon, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -40,12 +40,12 @@ function CitationHtmlView({ ticket }: { ticket: Ticket }) {
   // In a real app, this HTML should be sanitized to prevent XSS attacks.
   const htmlContent = `
     <div style="font-family: monospace; border: 1px solid #ccc; padding: 16px; border-radius: 8px;">
-      <h3 style="text-align: center; margin: 0 0 16px; font-size: 1.2em;">PARKING VIOLATION NOTICE</h3>
+      <h3 style="text-align: center; margin: 0 0 16px; font-size: 1.2em;">HEALTH VIOLATION NOTICE</h3>
       <p><strong>CITATION #:</strong> ${ticket.id}</p>
       <p><strong>DATE:</strong> ${format(parseISO(ticket.date), 'MM/dd/yyyy')}</p>
       <p><strong>NAME:</strong> ${ticket.lastName}, ${ticket.firstName}</p>
       <hr style="margin: 12px 0;">
-      <p><strong>VEHICLE:</strong> ${ticket.vehicle}</p>
+      <p><strong>PET DETAILS:</strong> ${ticket.vehicle}</p>
       <p><strong>LOCATION:</strong> ${ticket.location}</p>
       <p><strong>VIOLATION:</strong> ${ticket.violation}</p>
       <hr style="margin: 12px 0;">
@@ -97,7 +97,7 @@ export default function TicketDetailsPage({ params, searchParams }: { params: { 
                  <DetailRow icon={<User className="w-4 h-4"/>} label="Name" value={`${ticket.firstName} ${ticket.lastName}`} />
                  <DetailRow icon={<FileText className="w-4 h-4"/>} label="Violation" value={ticket.violation} />
                  <DetailRow icon={<LocateIcon className="w-4 h-4"/>} label="Location" value={ticket.location} />
-                 <DetailRow icon={<Car className="w-4 h-4"/>} label="Vehicle" value={ticket.vehicle} />
+                 <DetailRow icon={<Dog className="w-4 h-4"/>} label="Pet Details" value={ticket.vehicle} />
                  <DetailRow icon={<Clock className="w-4 h-4"/>} label="Date Issued" value={format(parseISO(ticket.date), 'MMMM d, yyyy')} />
               </div>
               <Separator/>

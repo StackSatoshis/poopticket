@@ -69,7 +69,7 @@ export function TicketSearchForm() {
         <Label htmlFor="citationId">Citation Number</Label>
         <Input
           id="citationId"
-          placeholder="e.g., PT12345"
+          placeholder="e.g., PW12345"
           value={citationId}
           onChange={(e) => setCitationId(e.target.value)}
           required

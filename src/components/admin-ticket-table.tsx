@@ -51,12 +51,12 @@ function CitationHtmlView({ ticket }: { ticket: Ticket }) {
   // In a real app, this HTML should be sanitized to prevent XSS attacks.
   const htmlContent = `
     <div style="font-family: monospace; border: 1px solid #ccc; padding: 16px; border-radius: 8px; background-color: #fff; color: #000;">
-      <h3 style="text-align: center; margin: 0 0 16px; font-size: 1.2em;">PARKING VIOLATION NOTICE</h3>
+      <h3 style="text-align: center; margin: 0 0 16px; font-size: 1.2em;">HEALTH VIOLATION NOTICE</h3>
       <p><strong>CITATION #:</strong> ${ticket.id}</p>
       <p><strong>DATE:</strong> ${format(parseISO(ticket.date), 'MM/dd/yyyy')}</p>
       <p><strong>NAME:</strong> ${ticket.lastName}, ${ticket.firstName}</p>
       <hr style="margin: 12px 0;">
-      <p><strong>VEHICLE:</strong> ${ticket.vehicle}</p>
+      <p><strong>PET DETAILS:</strong> ${ticket.vehicle}</p>
       <p><strong>LOCATION:</strong> ${ticket.location}</p>
       <p><strong>VIOLATION:</strong> ${ticket.violation}</p>
       <hr style="margin: 12px 0;">
@@ -176,7 +176,7 @@ export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
         <div className="w-full sm:w-auto">
           <Input
-            placeholder="Search by ID, name, vehicle..."
+            placeholder="Search by ID, name, pet..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-full sm:max-w-xs"
@@ -273,7 +273,7 @@ export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
                         <Separator/>
                         <DetailRow label="Location" value={selectedTicket.location} />
                         <Separator/>
-                        <DetailRow label="Vehicle" value={selectedTicket.vehicle} />
+                        <DetailRow label="Pet Details" value={selectedTicket.vehicle} />
                         <Separator/>
                         <DetailRow label="Amount" value={`$${selectedTicket.amount.toFixed(2)}`} />
                     </div>

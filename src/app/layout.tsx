@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'PoopTicket',
-  description: 'citation payment portal',
+  description: 'Pet waste citation payment portal',
 };
 
 export default function RootLayout({

@@ -33,18 +33,18 @@ export function SubmitTicketForm() {
     <Card>
       <CardHeader>
         <CardTitle>Submit New Citation</CardTitle>
-        <CardDescription>Manually create a new parking citation.</CardDescription>
+        <CardDescription>Manually create a new pet waste citation.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="citationId">Citation Number</Label>
-              <Input id="citationId" placeholder="e.g., PT55555" required />
+              <Input id="citationId" placeholder="e.g., PW55555" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="vehicle">Vehicle (Make/Model & Plate)</Label>
-              <Input id="vehicle" placeholder="e.g., Honda Civic - ABC-123" required />
+              <Label htmlFor="vehicle">Pet Details (Breed, Color)</Label>
+              <Input id="vehicle" placeholder="e.g., Golden Retriever, brown" required />
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
@@ -59,11 +59,11 @@ export function SubmitTicketForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="location">Location of Violation</Label>
-            <Input id="location" placeholder="123 Main St" required />
+            <Input id="location" placeholder="e.g., Central Park, near playground" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="violation">Violation Description</Label>
-            <Textarea id="violation" placeholder="e.g., Parked in a no-parking zone" required />
+            <Textarea id="violation" placeholder="e.g., Failure to remove pet waste" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="amount">Fine Amount</Label>
