@@ -10,7 +10,7 @@ import { UserManagementTable } from '@/components/user-management-table';
 import { PropertyManagementTable, type PropertyWithRevenue } from '@/components/property-management-table';
 import { SubmitTicketForm } from '@/components/submit-ticket-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Ticket as TicketIcon, DollarSign, Building } from 'lucide-react';
+import { Users, Ticket as TicketIcon, DollarSign, Building, CircleAlert } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { AddUserDialog } from '@/components/add-user-dialog';
@@ -18,6 +18,8 @@ import { AddPropertyDialog } from '@/components/add-property-dialog';
 import { PropertyAssignmentModal } from '@/components/property-assignment-modal';
 import { isAfter, subMonths, parseISO } from 'date-fns';
 import { EditPropertyDialog } from '@/components/edit-property-dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function SuperAdminDashboard() {
   const users = getAllUsers();
@@ -162,32 +164,120 @@ function SuperAdminDashboard() {
 }
 
 function ManagerDashboard({ user }: { user: User }) {
-  const tickets = user.assignedProperties ? getTicketsForManager(user.assignedProperties) : [];
-  const properties = getAllProperties().filter((p) => user.assignedProperties?.includes(p.id));
+  const [selectedPropertyId, setSelectedPropertyId] = useState<'all' | string>('all');
+
+  const allManagerTickets = user.assignedProperties ? getTicketsForManager(user.assignedProperties) : [];
+  const assignedProperties = getAllProperties().filter((p) => user.assignedProperties?.includes(p.id));
+
+  const filteredTickets =
+    selectedPropertyId === 'all'
+      ? allManagerTickets
+      : allManagerTickets.filter((ticket) => ticket.propertyId === selectedPropertyId);
+
+  const selectedPropertyName =
+    selectedPropertyId === 'all'
+      ? 'All Assigned Properties'
+      : assignedProperties.find((p) => p.id === selectedPropertyId)?.name;
+
+  const totalRevenue = filteredTickets
+    .filter((ticket) => ticket.status === 'Paid')
+    .reduce((acc, ticket) => acc + ticket.amount, 0);
+  const totalTickets = filteredTickets.length;
+  const overdueTickets = filteredTickets.filter(t => t.status === 'Overdue').length;
+
 
   return (
-    <Tabs defaultValue="tickets" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="tickets">Your Tickets</TabsTrigger>
-        <TabsTrigger value="submit">Submit New Citation</TabsTrigger>
-      </TabsList>
-      <TabsContent value="tickets">
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Tickets</CardTitle>
-            <CardDescription>
-              Citations for your assigned properties: {properties.map((p) => p.name).join(', ')}.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AdminTicketTable tickets={tickets} />
-          </CardContent>
-        </Card>
-      </TabsContent>
-      <TabsContent value="submit">
-        <SubmitTicketForm />
-      </TabsContent>
-    </Tabs>
+    <>
+      <div className="mb-6 flex items-center gap-4">
+        <Label htmlFor="property-select" className="text-base whitespace-nowrap">
+          Viewing Property:
+        </Label>
+        <Select value={selectedPropertyId} onValueChange={(value) => setSelectedPropertyId(value as 'all' | string)}>
+          <SelectTrigger id="property-select" className="w-full sm:w-[300px]">
+            <SelectValue placeholder="Select a property" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Assigned Properties</SelectItem>
+            {assignedProperties.map((prop) => (
+              <SelectItem key={prop.id} value={prop.id}>
+                {prop.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Tabs defaultValue="dashboard" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="tickets">All Tickets</TabsTrigger>
+          <TabsTrigger value="submit">Submit New Citation</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="dashboard">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 my-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">from {selectedPropertyName}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Tickets</CardTitle>
+                <TicketIcon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+{totalTickets}</div>
+                <p className="text-xs text-muted-foreground">for {selectedPropertyName}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Overdue Tickets</CardTitle>
+                <CircleAlert className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{overdueTickets}</div>
+                <p className="text-xs text-muted-foreground">awaiting payment</p>
+              </CardContent>
+            </Card>
+          </div>
+          <Card>
+            <CardHeader>
+                <CardTitle>Recent Tickets</CardTitle>
+                <CardDescription>
+                    A list of the 5 most recent citations for {selectedPropertyName}.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <AdminTicketTable tickets={filteredTickets.slice(0, 5)} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="tickets">
+            <Card>
+                <CardHeader>
+                    <CardTitle>All Tickets for {selectedPropertyName}</CardTitle>
+                    <CardDescription>
+                        A complete list of all citations for the selected property view.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <AdminTicketTable tickets={filteredTickets} />
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="submit">
+          <SubmitTicketForm />
+        </TabsContent>
+      </Tabs>
+    </>
   );
 }
 
