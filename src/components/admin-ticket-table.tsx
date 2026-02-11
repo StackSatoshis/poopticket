@@ -30,6 +30,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { Separator } from './ui/separator';
 
 type StatusVariant = 'default' | 'secondary' | 'destructive' | 'outline';
 
@@ -64,6 +65,15 @@ function CitationHtmlView({ ticket }: { ticket: Ticket }) {
   `;
   return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
 }
+
+function DetailRow({ label, value }: { label: string; value: string | React.ReactNode }) {
+    return (
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <div className="font-medium text-sm text-right">{value}</div>
+      </div>
+    );
+  }
 
 type SortableKeys = keyof Ticket | 'daysOverdue';
 
@@ -230,17 +240,48 @@ export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
         </TableBody>
       </Table>
       <Dialog open={!!selectedTicket} onOpenChange={(isOpen) => { if (!isOpen) setSelectedTicket(null); }}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-4xl">
           {selectedTicket && (
             <>
               <DialogHeader>
-                <DialogTitle>Citation HTML View</DialogTitle>
+                <DialogTitle>Citation Details</DialogTitle>
                 <DialogDescription>
-                  This is a representation of the original citation document for ticket #{selectedTicket.id}.
+                  Full details for citation #{selectedTicket.id}.
                 </DialogDescription>
               </DialogHeader>
-              <div className="py-4">
-                <CitationHtmlView ticket={selectedTicket} />
+              <div className="grid md:grid-cols-2 gap-8 py-4">
+                <div className="space-y-4">
+                    <div className="p-4 border rounded-lg space-y-3">
+                        <DetailRow label="Citation ID" value={selectedTicket.id} />
+                        <Separator/>
+                        <DetailRow label="Name" value={`${selectedTicket.firstName} ${selectedTicket.lastName}`} />
+                        <Separator/>
+                        <DetailRow label="Status" value={<Badge variant={getStatusVariant(selectedTicket.status)}>{selectedTicket.status}</Badge>} />
+                        <Separator/>
+                        <DetailRow label="Date Issued" value={format(parseISO(selectedTicket.date), 'MMMM d, yyyy')} />
+                        {getDaysOverdue(selectedTicket) > 0 && (
+                            <>
+                                <Separator/>
+                                <DetailRow
+                                    label="Days Overdue"
+                                    value={<span className="text-destructive font-bold">{getDaysOverdue(selectedTicket)}</span>}
+                                />
+                            </>
+                        )}
+                        <Separator/>
+                        <DetailRow label="Violation" value={selectedTicket.violation} />
+                        <Separator/>
+                        <DetailRow label="Location" value={selectedTicket.location} />
+                        <Separator/>
+                        <DetailRow label="Vehicle" value={selectedTicket.vehicle} />
+                        <Separator/>
+                        <DetailRow label="Amount" value={`$${selectedTicket.amount.toFixed(2)}`} />
+                    </div>
+                </div>
+                <div className="space-y-4">
+                    <p className="font-medium">Citation HTML View</p>
+                    <CitationHtmlView ticket={selectedTicket} />
+                </div>
               </div>
             </>
           )}
