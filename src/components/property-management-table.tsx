@@ -20,10 +20,12 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
+type PropertyWithRevenue = Property & { revenue: number };
+
 export function PropertyManagementTable({
   properties,
 }: {
-  properties: Property[];
+  properties: PropertyWithRevenue[];
 }) {
   const { toast } = useToast();
 
@@ -43,6 +45,7 @@ export function PropertyManagementTable({
         <TableRow>
           <TableHead>Property ID</TableHead>
           <TableHead>Property Name</TableHead>
+          <TableHead className="text-right">Revenue</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -51,6 +54,7 @@ export function PropertyManagementTable({
           <TableRow key={property.id}>
             <TableCell className="font-medium">{property.id}</TableCell>
             <TableCell>{property.name}</TableCell>
+            <TableCell className="text-right">${property.revenue.toFixed(2)}</TableCell>
             <TableCell className="text-right">
               <TooltipProvider>
                 <Tooltip>

@@ -24,9 +24,18 @@ function SuperAdminDashboard() {
 
   const [selectedUserForAssignment, setSelectedUserForAssignment] = useState<User | null>(null);
 
-  const totalRevenue = users.reduce((acc, user) => acc + user.revenueGenerated, 0);
+  const totalRevenue = tickets
+    .filter((ticket) => ticket.status === 'Paid')
+    .reduce((acc, ticket) => acc + ticket.amount, 0);
   const totalTickets = tickets.length;
   const totalProperties = properties.length;
+  
+  const propertiesWithRevenue = properties.map((property) => ({
+    ...property,
+    revenue: tickets
+      .filter((ticket) => ticket.propertyId === property.id && ticket.status === 'Paid')
+      .reduce((acc, ticket) => acc + ticket.amount, 0),
+  }));
 
   const handleEditAssignments = (user: User) => {
     if (user.role === 'Manager') {
@@ -109,7 +118,7 @@ function SuperAdminDashboard() {
               <AddPropertyDialog />
             </CardHeader>
             <CardContent>
-              <PropertyManagementTable properties={properties} />
+              <PropertyManagementTable properties={propertiesWithRevenue} />
             </CardContent>
           </Card>
         </TabsContent>
