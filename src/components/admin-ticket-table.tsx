@@ -12,7 +12,8 @@ import {
 import type { Ticket } from '@/lib/types';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Send } from 'lucide-react';
+import { Input } from './ui/input';
+import { ArrowUp, ArrowDown, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import {
@@ -27,8 +28,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-
+} from '@/components/ui/tooltip';
 
 type StatusVariant = 'default' | 'secondary' | 'destructive' | 'outline';
 
@@ -64,9 +64,22 @@ function CitationHtmlView({ ticket }: { ticket: Ticket }) {
   return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
 }
 
+type SortableKeys = keyof Ticket | 'daysOverdue';
+
 export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
   const { toast } = useToast();
   const [selectedTicket, setSelectedTicket] = React.useState<Ticket | null>(null);
+  const [sortConfig, setSortConfig] = React.useState<{ key: SortableKeys; direction: 'ascending' | 'descending' } | null>({ key: 'date', direction: 'descending' });
+  const [statusFilter, setStatusFilter] = React.useState<Ticket['status'] | 'all'>('all');
+  const [searchTerm, setSearchTerm] = React.useState('');
+
+  const getDaysOverdue = (ticket: Ticket) => {
+    if (ticket.status === 'Paid') return 0;
+    const issueDate = parseISO(ticket.date);
+    const days = differenceInDays(new Date(), issueDate);
+    if (days > 30) return days - 30;
+    return 0;
+  };
 
   const handleResendNotification = (e: React.MouseEvent, ticketId: string) => {
     e.stopPropagation();
@@ -78,30 +91,106 @@ export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
       description: `A new notification has been queued for citation ${ticketId}.`,
     });
   };
+  
+  const requestSort = (key: SortableKeys) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
 
-  const getDaysOverdue = (ticket: Ticket) => {
-    if (ticket.status === 'Paid') return 0;
-    const issueDate = parseISO(ticket.date);
-    const days = differenceInDays(new Date(), issueDate);
-    if(days > 30) return days - 30;
-    return 0;
-  }
+  const sortedAndFilteredTickets = React.useMemo(() => {
+    let filterableTickets = [...tickets];
+
+    if (statusFilter !== 'all') {
+      filterableTickets = filterableTickets.filter((ticket) => ticket.status === statusFilter);
+    }
+
+    if (searchTerm) {
+      const lowercasedSearchTerm = searchTerm.toLowerCase();
+      filterableTickets = filterableTickets.filter(ticket =>
+            ticket.id.toLowerCase().includes(lowercasedSearchTerm) ||
+            `${ticket.firstName} ${ticket.lastName}`.toLowerCase().includes(lowercasedSearchTerm) ||
+            ticket.vehicle.toLowerCase().includes(lowercasedSearchTerm)
+      );
+    }
+
+    if (sortConfig !== null) {
+      filterableTickets.sort((a, b) => {
+        let aValue: string | number;
+        let bValue: string | number;
+
+        if (sortConfig.key === 'daysOverdue') {
+          aValue = getDaysOverdue(a);
+          bValue = getDaysOverdue(b);
+        } else if (sortConfig.key === 'date') {
+            aValue = parseISO(a.date).getTime();
+            bValue = parseISO(b.date).getTime();
+        } else {
+            aValue = a[sortConfig.key as keyof Ticket];
+            bValue = b[sortConfig.key as keyof Ticket];
+        }
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filterableTickets;
+  }, [tickets, statusFilter, searchTerm, sortConfig]);
+
+  const SortableHeader = ({ sortKey, children, className }: { sortKey: SortableKeys, children: React.ReactNode, className?: string }) => (
+      <TableHead onClick={() => requestSort(sortKey)} className={cn("cursor-pointer", className)}>
+          <div className="flex items-center gap-1">
+              {children}
+              {sortConfig?.key === sortKey &&
+                  (sortConfig.direction === 'ascending' ? (
+                      <ArrowUp className="h-3 w-3" />
+                  ) : (
+                      <ArrowDown className="h-3 w-3" />
+                  ))}
+          </div>
+      </TableHead>
+  );
+
 
   return (
     <>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
+        <div className="w-full sm:w-auto">
+          <Input
+            placeholder="Search by ID, name, vehicle..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-full sm:max-w-xs"
+          />
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button size="sm" variant={statusFilter === 'all' ? 'default' : 'outline'} onClick={() => setStatusFilter('all')}>All</Button>
+          <Button size="sm" variant={statusFilter === 'Paid' ? 'default' : 'outline'} onClick={() => setStatusFilter('Paid')}>Paid</Button>
+          <Button size="sm" variant={statusFilter === 'Unpaid' ? 'default' : 'outline'} onClick={() => setStatusFilter('Unpaid')}>Unpaid</Button>
+          <Button size="sm" variant={statusFilter === 'Overdue' ? 'default' : 'outline'} onClick={() => setStatusFilter('Overdue')}>Overdue</Button>
+        </div>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Citation ID</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Days Overdue</TableHead>
-            <TableHead>Status</TableHead>
+            <SortableHeader sortKey="id">Citation ID</SortableHeader>
+            <SortableHeader sortKey="lastName">Name</SortableHeader>
+            <SortableHeader sortKey="date">Date</SortableHeader>
+            <SortableHeader sortKey="daysOverdue">Days Overdue</SortableHeader>
+            <SortableHeader sortKey="status">Status</SortableHeader>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tickets.map((ticket) => (
+          {sortedAndFilteredTickets.map((ticket) => (
             <TableRow key={ticket.id} onClick={() => setSelectedTicket(ticket)} className="cursor-pointer">
               <TableCell className="font-medium">{ticket.id}</TableCell>
               <TableCell>{ticket.lastName}, {ticket.firstName}</TableCell>
