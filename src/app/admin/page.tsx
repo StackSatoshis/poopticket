@@ -166,24 +166,28 @@ function ManagerDashboard({ user }: { user: User }) {
   const properties = getAllProperties().filter((p) => user.assignedProperties?.includes(p.id));
 
   return (
-    <div className="grid gap-8 lg:grid-cols-3">
-      <div className="lg:col-span-2">
+    <Tabs defaultValue="tickets" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="tickets">Your Tickets</TabsTrigger>
+        <TabsTrigger value="submit">Submit New Citation</TabsTrigger>
+      </TabsList>
+      <TabsContent value="tickets">
         <Card>
           <CardHeader>
             <CardTitle>Your Tickets</CardTitle>
             <CardDescription>
               Citations for your assigned properties: {properties.map((p) => p.name).join(', ')}.
             </CardDescription>
-          </CardHeader>
+          </IcardHeader>
           <CardContent>
             <AdminTicketTable tickets={tickets} />
           </CardContent>
         </Card>
-      </div>
-      <div>
+      </TabsContent>
+      <TabsContent value="submit">
         <SubmitTicketForm />
-      </div>
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 }
 
