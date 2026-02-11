@@ -8,11 +8,11 @@ export default function Home() {
     <>
       <div className="absolute inset-0 -z-10">
         <Image
-          src="https://images.unsplash.com/photo-1560493676-04071c5f467b?w=2574"
-          alt="Green grass background"
+          src="https://images.unsplash.com/photo-1594495894542-a46cc73e081a?w=2574"
+          alt="Grassy park background"
           fill
           className="object-cover opacity-50"
-          data-ai-hint="green grass"
+          data-ai-hint="park grass"
         />
       </div>
       <div className="container mx-auto py-8 sm:py-12 md:py-16">
