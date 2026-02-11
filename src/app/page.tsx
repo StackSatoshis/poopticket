@@ -1,8 +1,12 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, ShieldCheck, DollarSign, Camera, Users, Sparkles } from 'lucide-react';
+import type { User } from '@/lib/types';
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
@@ -19,6 +23,22 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode; titl
 }
 
 export default function HomePage() {
+  const router = useRouter();
+
+  const handlePropertyManagerClick = () => {
+    const storedUser = sessionStorage.getItem('loggedInUser');
+    if (storedUser) {
+      const user = JSON.parse(storedUser) as User;
+      if (user.role === 'Super Admin' || user.role === 'Manager') {
+        router.push('/admin');
+      } else {
+        router.push('/login');
+      }
+    } else {
+      router.push('/login');
+    }
+  };
+
   return (
     <div className="bg-background text-foreground">
       {/* Hero Section */}
@@ -42,8 +62,8 @@ export default function HomePage() {
             <Button asChild size="lg">
               <Link href="/violations">Pay a Citation</Link>
             </Button>
-            <Button asChild size="lg" variant="secondary">
-              <Link href="#property-managers">For Property Managers</Link>
+            <Button size="lg" variant="secondary" onClick={handlePropertyManagerClick}>
+              For Property Managers
             </Button>
           </div>
         </div>
