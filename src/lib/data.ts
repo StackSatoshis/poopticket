@@ -1,5 +1,52 @@
-import type { Ticket } from '@/lib/types';
+import type { Ticket, User, Property } from '@/lib/types';
 import { subDays } from 'date-fns';
+
+export const mockProperties: Property[] = [
+  { id: 'prop1', name: 'Downtown Parking Lot' },
+  { id: 'prop2', name: 'Uptown Garage' },
+  { id: 'prop3', name: 'Westside Street Parking' },
+];
+
+export const mockUsers: User[] = [
+  {
+    id: 'user1',
+    email: 'superadmin@poopticket.com',
+    password: 'password123',
+    role: 'Super Admin',
+    firstName: 'Super',
+    lastName: 'Admin',
+    revenueGenerated: 15000.75,
+  },
+  {
+    id: 'user2',
+    email: 'manager1@poopticket.com',
+    password: 'password123',
+    role: 'Manager',
+    assignedProperties: ['prop1', 'prop2'],
+    firstName: 'Manager',
+    lastName: 'One',
+    revenueGenerated: 7500.25,
+  },
+  {
+    id: 'user3',
+    email: 'manager2@poopticket.com',
+    password: 'password123',
+    role: 'Manager',
+    assignedProperties: ['prop3'],
+    firstName: 'Manager',
+    lastName: 'Two',
+    revenueGenerated: 3200.5,
+  },
+  {
+    id: 'user-regular',
+    email: 'admin@poopticket.com',
+    password: 'password123',
+    role: 'User',
+    firstName: 'Regular',
+    lastName: 'User',
+    revenueGenerated: 0,
+  },
+];
 
 export const mockTickets: Ticket[] = [
   {
@@ -12,6 +59,7 @@ export const mockTickets: Ticket[] = [
     violation: 'Illegal Parking - Fire Hydrant',
     location: '123 Main St, Anytown, USA',
     vehicle: 'Toyota Camry - ABC-123',
+    propertyId: 'prop1',
   },
   {
     id: 'PT67890',
@@ -23,6 +71,7 @@ export const mockTickets: Ticket[] = [
     violation: 'Expired Meter',
     location: '456 Oak Ave, Anytown, USA',
     vehicle: 'Honda Civic - XYZ-789',
+    propertyId: 'prop1',
   },
   {
     id: 'PT24680',
@@ -34,6 +83,7 @@ export const mockTickets: Ticket[] = [
     violation: 'Speeding in a School Zone',
     location: '789 Pine Ln, Anytown, USA',
     vehicle: 'Ford F-150 - FJB-456',
+    propertyId: 'prop2',
   },
   {
     id: 'PT13579',
@@ -45,6 +95,7 @@ export const mockTickets: Ticket[] = [
     violation: 'No Parking 2am-6am',
     location: '101 Maple Dr, Anytown, USA',
     vehicle: 'Chevrolet Equinox - EWL-111',
+    propertyId: 'prop3',
   },
   {
     id: 'PT98765',
@@ -56,6 +107,7 @@ export const mockTickets: Ticket[] = [
     violation: 'Reckless Driving',
     location: '222 Birch Blvd, Anytown, USA',
     vehicle: 'Dodge Charger - MBB-987',
+    propertyId: 'prop2',
   },
   {
     id: 'PT54321',
@@ -67,6 +119,7 @@ export const mockTickets: Ticket[] = [
     violation: 'Failure to Stop at Sign',
     location: '333 Cedar Ct, Anytown, USA',
     vehicle: 'Nissan Altima - SJO-543',
+    propertyId: 'prop3',
   },
 ];
 
@@ -80,4 +133,20 @@ export const findTicket = (id: string, lastName: string): Ticket | undefined => 
 
 export const getAllTickets = (): Ticket[] => {
   return mockTickets;
+};
+
+export const findUserByEmail = (email: string): User | undefined => {
+  return mockUsers.find((user) => user.email.toLowerCase() === email.toLowerCase());
+};
+
+export const getAllUsers = (): User[] => {
+  return mockUsers;
+};
+
+export const getAllProperties = (): Property[] => {
+  return mockProperties;
+};
+
+export const getTicketsForManager = (propertyIds: string[]): Ticket[] => {
+  return mockTickets.filter((ticket) => propertyIds.includes(ticket.propertyId));
 };

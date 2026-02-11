@@ -1,30 +1,170 @@
-import { getAllTickets } from '@/lib/data';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import type { User, Ticket, Property } from '@/lib/types';
+import { getAllUsers, getAllProperties, getTicketsForManager, getAllTickets } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminTicketTable } from '@/components/admin-ticket-table';
-import { Users } from 'lucide-react';
+import { UserManagementTable } from '@/components/user-management-table';
+import { SubmitTicketForm } from '@/components/submit-ticket-form';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Users, Ticket as TicketIcon, DollarSign, Building } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+
+function SuperAdminDashboard() {
+  const users = getAllUsers();
+  const properties = getAllProperties();
+  const tickets = getAllTickets();
+
+  const totalRevenue = users.reduce((acc, user) => acc + user.revenueGenerated, 0);
+  const totalTickets = tickets.length;
+  const totalProperties = properties.length;
+
+  return (
+    <Tabs defaultValue="dashboard" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+        <TabsTrigger value="users">User Management</TabsTrigger>
+      </TabsList>
+      <TabsContent value="dashboard">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 my-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground">from all properties</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Tickets</CardTitle>
+              <TicketIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">+{totalTickets}</div>
+              <p className="text-xs text-muted-foreground">across all properties</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Managed Properties</CardTitle>
+              <Building className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalProperties}</div>
+              <p className="text-xs text-muted-foreground">in the system</p>
+            </CardContent>
+          </Card>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>All Tickets</CardTitle>
+            <CardDescription>A complete list of all citations in the system.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AdminTicketTable tickets={tickets} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+      <TabsContent value="users">
+        <Card>
+          <CardHeader>
+            <CardTitle>User Management</CardTitle>
+            <CardDescription>Manage users, roles, and property assignments.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <UserManagementTable users={users} properties={properties} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+function ManagerDashboard({ user }: { user: User }) {
+  const tickets = user.assignedProperties ? getTicketsForManager(user.assignedProperties) : [];
+  const properties = getAllProperties().filter((p) => user.assignedProperties?.includes(p.id));
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Tickets</CardTitle>
+            <CardDescription>
+              Citations for your assigned properties: {properties.map((p) => p.name).join(', ')}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AdminTicketTable tickets={tickets} />
+          </CardContent>
+        </Card>
+      </div>
+      <div>
+        <SubmitTicketForm />
+      </div>
+    </div>
+  );
+}
 
 export default function AdminPage() {
-  // In a real app, this data would be fetched from a secure API endpoint.
-  const tickets = getAllTickets();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const storedUser = sessionStorage.getItem('loggedInUser');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser) as User;
+      if (parsedUser.role === 'Super Admin' || parsedUser.role === 'Manager') {
+        setUser(parsedUser);
+      } else {
+        toast({ title: 'Access Denied', description: "You don't have permission.", variant: 'destructive' });
+        router.push('/login');
+      }
+    } else {
+      router.push('/login');
+    }
+    setLoading(false);
+  }, [router, toast]);
+
+  if (loading || !user) {
+    return (
+      <div className="container mx-auto py-8 sm:py-12">
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-1/2" />
+          <Skeleton className="h-4 w-3/4" />
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-8 w-1/4" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-64 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const greeting = `Welcome back, ${user.firstName}!`;
+  const roleDescription = `You are logged in as a ${user.role}.`;
 
   return (
     <div className="container mx-auto py-8 sm:py-12">
-      <Card className="shadow-lg">
-        <CardHeader>
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-primary text-primary-foreground rounded-lg">
-              <Users className="h-6 w-6" />
-            </div>
-            <div>
-              <CardTitle className="text-2xl font-headline">Admin Dashboard</CardTitle>
-              <CardDescription>Manage and review all citations in the system.</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <AdminTicketTable tickets={tickets} />
-        </CardContent>
-      </Card>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold font-headline">{greeting}</h1>
+        <p className="text-muted-foreground">{roleDescription}</p>
+      </div>
+
+      {user.role === 'Super Admin' && <SuperAdminDashboard />}
+      {user.role === 'Manager' && <ManagerDashboard user={user} />}
     </div>
   );
 }

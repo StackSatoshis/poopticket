@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Shield } from 'lucide-react';
+import { findUserByEmail } from '@/lib/data';
 
 const MAX_FAILED_ATTEMPTS = 10;
 const BLOCK_DURATION_MS = 5 * 60 * 1000; // 5 minutes
@@ -36,14 +37,28 @@ export default function LoginPage() {
     setIsLoading(true);
 
     // Mock authentication
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    if (email === 'admin@poopticket.com' && password === 'password123') {
+    const user = findUserByEmail(email);
+
+    if (user && user.password === password) {
+      if (user.role === 'User') {
+        toast({
+          title: 'Login Failed',
+          description: 'You do not have permission to access the admin area.',
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
+
       toast({
         title: 'Login Successful',
-        description: 'Redirecting to admin dashboard...',
+        description: `Redirecting to dashboard as ${user.role}...`,
       });
-      setFailedAttempts(0); // Reset on success
+      setFailedAttempts(0);
+      sessionStorage.setItem('loggedInUser', JSON.stringify(user));
+      window.dispatchEvent(new Event('storage')); // Notify other components
       router.push('/admin');
     } else {
       const newAttemptCount = failedAttempts + 1;
@@ -75,9 +90,9 @@ export default function LoginPage() {
     <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
-            <div className="mx-auto bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center mb-4">
-              <Shield className="h-8 w-8" />
-            </div>
+          <div className="mx-auto bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center mb-4">
+            <Shield className="h-8 w-8" />
+          </div>
           <CardTitle className="font-headline text-2xl">Admin Portal</CardTitle>
           <CardDescription>Enter your credentials to access the dashboard.</CardDescription>
         </CardHeader>
@@ -88,7 +103,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@poopticket.com"
+                placeholder="admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -100,7 +115,7 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="password123"
+                placeholder="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -108,18 +123,28 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading || isBlocked}>
-                {isLoading ? (
-                    <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
-                        Authenticating...
-                    </>
-                ) : isBlocked ? (
-                    'Temporarily Blocked'
-                ) : 'Sign In'}
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
+                  Authenticating...
+                </>
+              ) : isBlocked ? (
+                'Temporarily Blocked'
+              ) : (
+                'Sign In'
+              )}
             </Button>
-            <p className="text-xs text-center text-muted-foreground pt-2">
-                For demo: use <strong>admin@poopticket.com</strong> and <strong>password123</strong>
-            </p>
+            <div className="text-xs text-center text-muted-foreground pt-2 space-y-1">
+              <p>
+                <strong>Super Admin:</strong> superadmin@poopticket.com
+              </p>
+              <p>
+                <strong>Manager:</strong> manager1@poopticket.com
+              </p>
+              <p>
+                <strong>Password:</strong> password123
+              </p>
+            </div>
           </form>
         </CardContent>
       </Card>

@@ -1,3 +1,21 @@
+export type UserRole = 'Super Admin' | 'Manager' | 'User';
+
+export type Property = {
+  id: string;
+  name: string;
+};
+
+export type User = {
+  id: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  firstName: string;
+  lastName: string;
+  assignedProperties?: string[]; // Array of property IDs
+  revenueGenerated: number;
+};
+
 export type TicketStatus = 'Paid' | 'Unpaid' | 'Overdue';
 
 export type Ticket = {
@@ -10,4 +28,5 @@ export type Ticket = {
   violation: string;
   location: string;
   vehicle: string;
+  propertyId: string;
 };
