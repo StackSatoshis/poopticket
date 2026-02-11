@@ -104,10 +104,15 @@ export default function TicketDetailsPage({ params, searchParams }: { params: { 
               <div className="p-4 bg-muted/50 rounded-lg">
                 <div className="flex justify-between items-center">
                     <div>
-                        <p className="text-sm text-muted-foreground">Amount Due</p>
+                        <p className="text-sm text-muted-foreground">{ticket.status === 'Paid' ? 'Amount Paid' : 'Amount Due'}</p>
                         <p className="text-3xl font-bold text-primary">${ticket.amount.toFixed(2)}</p>
                     </div>
-                    {daysOverdue > 0 && (
+                    {ticket.status === 'Paid' ? (
+                        <div className="text-right">
+                           <p className="text-sm font-semibold text-primary">Revenue</p>
+                           <p className="text-3xl font-bold text-primary">${ticket.amount.toFixed(2)}</p>
+                        </div>
+                    ) : daysOverdue > 0 && (
                         <div className="text-right">
                            <p className="text-sm text-destructive font-semibold">Days Overdue</p>
                            <p className="text-3xl font-bold text-destructive">{daysOverdue}</p>

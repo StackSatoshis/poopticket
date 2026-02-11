@@ -195,7 +195,7 @@ export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
             <SortableHeader sortKey="id">Citation ID</SortableHeader>
             <SortableHeader sortKey="lastName">Name</SortableHeader>
             <SortableHeader sortKey="date">Date</SortableHeader>
-            <SortableHeader sortKey="daysOverdue">Days Overdue</SortableHeader>
+            <SortableHeader sortKey="daysOverdue">Overdue / Paid Amt</SortableHeader>
             <SortableHeader sortKey="status">Status</SortableHeader>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -207,7 +207,9 @@ export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
               <TableCell>{ticket.lastName}, {ticket.firstName}</TableCell>
               <TableCell>{format(parseISO(ticket.date), 'MM/dd/yyyy')}</TableCell>
               <TableCell>
-                {getDaysOverdue(ticket) > 0 ? (
+                {ticket.status === 'Paid' ? (
+                    <span className="text-primary font-medium">${ticket.amount.toFixed(2)}</span>
+                ) : getDaysOverdue(ticket) > 0 ? (
                   <span className="text-destructive font-medium">{getDaysOverdue(ticket)}</span>
                 ) : (
                   <span className="text-muted-foreground">-</span>
@@ -259,14 +261,25 @@ export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
                         <DetailRow label="Status" value={<Badge variant={getStatusVariant(selectedTicket.status)}>{selectedTicket.status}</Badge>} />
                         <Separator/>
                         <DetailRow label="Date Issued" value={format(parseISO(selectedTicket.date), 'MMMM d, yyyy')} />
-                        {getDaysOverdue(selectedTicket) > 0 && (
-                            <>
+                        {selectedTicket.status === 'Paid' ? (
+                             <>
                                 <Separator/>
-                                <DetailRow
-                                    label="Days Overdue"
-                                    value={<span className="text-destructive font-bold">{getDaysOverdue(selectedTicket)}</span>}
-                                />
-                            </>
+                                <DetailRow label="Amount Paid" value={<span className="font-bold text-primary">${selectedTicket.amount.toFixed(2)}</span>} />
+                             </>
+                        ) : (
+                            <>
+                                {getDaysOverdue(selectedTicket) > 0 && (
+                                    <>
+                                        <Separator/>
+                                        <DetailRow
+                                            label="Days Overdue"
+                                            value={<span className="text-destructive font-bold">{getDaysOverdue(selectedTicket)}</span>}
+                                        />
+                                    </>
+                                )}
+                                <Separator/>
+                                <DetailRow label="Amount Due" value={`$${selectedTicket.amount.toFixed(2)}`} />
+                           </>
                         )}
                         <Separator/>
                         <DetailRow label="Violation" value={selectedTicket.violation} />
@@ -274,8 +287,6 @@ export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
                         <DetailRow label="Location" value={selectedTicket.location} />
                         <Separator/>
                         <DetailRow label="Pet Details" value={selectedTicket.vehicle} />
-                        <Separator/>
-                        <DetailRow label="Amount" value={`$${selectedTicket.amount.toFixed(2)}`} />
                     </div>
                 </div>
                 <div className="space-y-4">
