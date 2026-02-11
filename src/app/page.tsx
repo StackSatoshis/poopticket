@@ -8,7 +8,7 @@ export default function Home() {
     <>
       <div className="absolute inset-0 -z-10">
         <Image
-          src="https://images.unsplash.com/photo-1543466835-00a7907e9de1"
+          src="https://www.sherwoodoregon.gov/wp-content/uploads/2025/01/snyder-dog-park-by-david-gilmore-1200x800-1200x756.jpg"
           alt="Dog park background"
           fill
           className="object-cover opacity-50"
