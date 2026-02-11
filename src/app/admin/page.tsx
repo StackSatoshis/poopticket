@@ -155,6 +155,7 @@ function SuperAdminDashboard() {
         isOpen={!!propertyToEdit}
         onOpenChange={(isOpen) => !isOpen && setPropertyToEdit(null)}
         property={propertyToEdit}
+        users={users}
       />
     </>
   );
