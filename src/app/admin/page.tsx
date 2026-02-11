@@ -7,12 +7,14 @@ import { getAllUsers, getAllProperties, getTicketsForManager, getAllTickets } fr
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminTicketTable } from '@/components/admin-ticket-table';
 import { UserManagementTable } from '@/components/user-management-table';
+import { PropertyManagementTable } from '@/components/property-management-table';
 import { SubmitTicketForm } from '@/components/submit-ticket-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Ticket as TicketIcon, DollarSign, Building } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { AddUserDialog } from '@/components/add-user-dialog';
+import { AddPropertyDialog } from '@/components/add-property-dialog';
 import { PropertyAssignmentModal } from '@/components/property-assignment-modal';
 
 function SuperAdminDashboard() {
@@ -35,9 +37,10 @@ function SuperAdminDashboard() {
   return (
     <>
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="users">User Management</TabsTrigger>
+          <TabsTrigger value="properties">Property Management</TabsTrigger>
         </TabsList>
         <TabsContent value="dashboard">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 my-4">
@@ -93,6 +96,20 @@ function SuperAdminDashboard() {
             </CardHeader>
             <CardContent>
               <UserManagementTable users={users} properties={properties} onEditAssignments={handleEditAssignments} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="properties">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Property Management</CardTitle>
+                <CardDescription>Manage properties in the system.</CardDescription>
+              </div>
+              <AddPropertyDialog />
+            </CardHeader>
+            <CardContent>
+              <PropertyManagementTable properties={properties} />
             </CardContent>
           </Card>
         </TabsContent>
