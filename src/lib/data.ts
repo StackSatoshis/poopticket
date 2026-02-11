@@ -50,6 +50,18 @@ export const mockUsers: User[] = [
 
 export const mockTickets: Ticket[] = [
   {
+    id: 'PW-WARN-001',
+    lastName: 'Davis',
+    firstName: 'Jessica',
+    date: subDays(new Date(), 2).toISOString(),
+    amount: 0,
+    status: 'Warning',
+    violation: 'First-time failure to remove pet waste',
+    location: 'Downtown Park, near pond',
+    vehicle: 'Corgi, tan/white',
+    propertyId: 'prop1',
+  },
+  {
     id: 'PW12345',
     lastName: 'Smith',
     firstName: 'John',

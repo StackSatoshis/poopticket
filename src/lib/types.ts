@@ -16,7 +16,7 @@ export type User = {
   revenueGenerated: number;
 };
 
-export type TicketStatus = 'Paid' | 'Unpaid' | 'Overdue';
+export type TicketStatus = 'Paid' | 'Unpaid' | 'Overdue' | 'Warning';
 
 export type Ticket = {
   id: string;

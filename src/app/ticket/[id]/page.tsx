@@ -2,7 +2,7 @@ import { findTicket } from '@/lib/data';
 import type { Ticket } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle2, CircleAlert, Clock, CreditCard, Dog, FileText, LocateIcon, User } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle2, CircleAlert, Clock, CreditCard, Dog, FileText, LocateIcon, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -16,6 +16,9 @@ function getStatusInfo(ticket: Ticket): { variant: StatusVariant; icon: React.Re
 
   if (ticket.status === 'Paid') {
     return { variant: 'default', icon: <CheckCircle2 className="h-4 w-4" />, daysOverdue: 0 };
+  }
+  if (ticket.status === 'Warning') {
+    return { variant: 'outline', icon: <AlertTriangle className="h-4 w-4 text-amber-600" />, daysOverdue: 0 };
   }
   if (ticket.status === 'Overdue' || (ticket.status === 'Unpaid' && daysOverdue > 0)) {
     return { variant: 'destructive', icon: <CircleAlert className="h-4 w-4" />, daysOverdue: Math.max(0, daysOverdue) };
@@ -49,7 +52,7 @@ function CitationHtmlView({ ticket }: { ticket: Ticket }) {
       <p><strong>LOCATION:</strong> ${ticket.location}</p>
       <p><strong>VIOLATION:</strong> ${ticket.violation}</p>
       <hr style="margin: 12px 0;">
-      <p><strong>AMOUNT DUE: $${ticket.amount.toFixed(2)}</strong></p>
+       <p><strong>${ticket.status === 'Warning' ? 'STATUS' : 'AMOUNT DUE'}: ${ticket.status === 'Warning' ? 'WARNING' : `$${ticket.amount.toFixed(2)}`}</strong></p>
     </div>
   `;
   return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
@@ -74,6 +77,7 @@ export default function TicketDetailsPage({ params, searchParams }: { params: { 
   }
 
   const { variant, icon, daysOverdue } = getStatusInfo(ticket);
+  const badgeClassName = ticket.status === 'Warning' ? 'border-amber-500 text-amber-600' : '';
 
   return (
     <div className="container mx-auto py-8 sm:py-12">
@@ -84,7 +88,7 @@ export default function TicketDetailsPage({ params, searchParams }: { params: { 
               <CardTitle className="text-2xl font-headline">Citation Details</CardTitle>
               <CardDescription>Citation ID: {ticket.id}</CardDescription>
             </div>
-            <Badge variant={variant} className="flex items-center gap-2 text-sm">
+            <Badge variant={variant} className={`flex items-center gap-2 text-sm ${badgeClassName}`}>
               {icon}
               <span>{ticket.status}</span>
             </Badge>
@@ -101,26 +105,36 @@ export default function TicketDetailsPage({ params, searchParams }: { params: { 
                  <DetailRow icon={<Clock className="w-4 h-4"/>} label="Date Issued" value={format(parseISO(ticket.date), 'MMMM d, yyyy')} />
               </div>
               <Separator/>
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <div className="flex justify-between items-center">
-                    <div>
-                        <p className="text-sm text-muted-foreground">{ticket.status === 'Paid' ? 'Amount Paid' : 'Amount Due'}</p>
-                        <p className="text-3xl font-bold text-primary">${ticket.amount.toFixed(2)}</p>
+              {ticket.status === 'Warning' ? (
+                <Alert variant="default" className="bg-amber-50 border-amber-200">
+                    <AlertTriangle className="h-4 w-4 !text-amber-600" />
+                    <AlertTitle className="text-amber-700">This is an Official Warning</AlertTitle>
+                    <AlertDescription className="text-amber-600">
+                    No fine is associated with this notice. Future violations may result in fines.
+                    </AlertDescription>
+                </Alert>
+                ) : (
+                <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <p className="text-sm text-muted-foreground">{ticket.status === 'Paid' ? 'Amount Paid' : 'Amount Due'}</p>
+                            <p className="text-3xl font-bold text-primary">${ticket.amount.toFixed(2)}</p>
+                        </div>
+                        {ticket.status === 'Paid' ? (
+                            <div className="text-right">
+                            <p className="text-sm font-semibold text-primary">Revenue</p>
+                            <p className="text-3xl font-bold text-primary">${ticket.amount.toFixed(2)}</p>
+                            </div>
+                        ) : daysOverdue > 0 && (
+                            <div className="text-right">
+                            <p className="text-sm text-destructive font-semibold">Days Overdue</p>
+                            <p className="text-3xl font-bold text-destructive">{daysOverdue}</p>
+                            </div>
+                        )}
                     </div>
-                    {ticket.status === 'Paid' ? (
-                        <div className="text-right">
-                           <p className="text-sm font-semibold text-primary">Revenue</p>
-                           <p className="text-3xl font-bold text-primary">${ticket.amount.toFixed(2)}</p>
-                        </div>
-                    ) : daysOverdue > 0 && (
-                        <div className="text-right">
-                           <p className="text-sm text-destructive font-semibold">Days Overdue</p>
-                           <p className="text-3xl font-bold text-destructive">{daysOverdue}</p>
-                        </div>
-                    )}
                 </div>
-              </div>
-               {ticket.status !== 'Paid' && (
+              )}
+               {ticket.status !== 'Paid' && ticket.status !== 'Warning' && (
                 <div className="space-y-3">
                   <p className="font-medium text-center">Select Payment Method</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

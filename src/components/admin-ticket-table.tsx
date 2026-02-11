@@ -42,6 +42,8 @@ function getStatusVariant(status: Ticket['status']): StatusVariant {
       return 'secondary';
     case 'Overdue':
       return 'destructive';
+    case 'Warning':
+        return 'outline';
     default:
       return 'outline';
   }
@@ -60,7 +62,7 @@ function CitationHtmlView({ ticket }: { ticket: Ticket }) {
       <p><strong>LOCATION:</strong> ${ticket.location}</p>
       <p><strong>VIOLATION:</strong> ${ticket.violation}</p>
       <hr style="margin: 12px 0;">
-      <p><strong>AMOUNT DUE: $${ticket.amount.toFixed(2)}</strong></p>
+      <p><strong>${ticket.status === 'Warning' ? 'STATUS' : 'AMOUNT DUE'}: ${ticket.status === 'Warning' ? 'WARNING' : `$${ticket.amount.toFixed(2)}`}</strong></p>
     </div>
   `;
   return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
@@ -85,7 +87,7 @@ export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const getDaysOverdue = (ticket: Ticket) => {
-    if (ticket.status === 'Paid') return 0;
+    if (ticket.status === 'Paid' || ticket.status === 'Warning') return 0;
     const issueDate = parseISO(ticket.date);
     const days = differenceInDays(new Date(), issueDate);
     if (days > 30) return days - 30;
@@ -187,6 +189,7 @@ export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
           <Button size="sm" variant={statusFilter === 'Paid' ? 'default' : 'outline'} onClick={() => setStatusFilter('Paid')}>Paid</Button>
           <Button size="sm" variant={statusFilter === 'Unpaid' ? 'default' : 'outline'} onClick={() => setStatusFilter('Unpaid')}>Unpaid</Button>
           <Button size="sm" variant={statusFilter === 'Overdue' ? 'default' : 'outline'} onClick={() => setStatusFilter('Overdue')}>Overdue</Button>
+          <Button size="sm" variant={statusFilter === 'Warning' ? 'default' : 'outline'} onClick={() => setStatusFilter('Warning')}>Warning</Button>
         </div>
       </div>
       <Table>
@@ -208,7 +211,9 @@ export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
               <TableCell>{format(parseISO(ticket.date), 'MM/dd/yyyy')}</TableCell>
               <TableCell>
                 {ticket.status === 'Paid' ? (
-                    <span className="text-primary font-medium">${ticket.amount.toFixed(2)}</span>
+                  <span className="text-primary font-medium">${ticket.amount.toFixed(2)}</span>
+                ) : ticket.status === 'Warning' ? (
+                    <Badge variant="outline" className="border-amber-500 text-amber-600">Warning</Badge>
                 ) : getDaysOverdue(ticket) > 0 ? (
                   <span className="text-destructive font-medium">{getDaysOverdue(ticket)}</span>
                 ) : (
@@ -261,23 +266,22 @@ export function AdminTicketTable({ tickets }: { tickets: Ticket[] }) {
                         <DetailRow label="Status" value={<Badge variant={getStatusVariant(selectedTicket.status)}>{selectedTicket.status}</Badge>} />
                         <Separator/>
                         <DetailRow label="Date Issued" value={format(parseISO(selectedTicket.date), 'MMMM d, yyyy')} />
+                        <Separator/>
                         {selectedTicket.status === 'Paid' ? (
-                             <>
-                                <Separator/>
-                                <DetailRow label="Amount Paid" value={<span className="font-bold text-primary">${selectedTicket.amount.toFixed(2)}</span>} />
-                             </>
+                             <DetailRow label="Amount Paid" value={<span className="font-bold text-primary">${selectedTicket.amount.toFixed(2)}</span>} />
+                        ) : selectedTicket.status === 'Warning' ? (
+                            <DetailRow label="Amount" value={<span className="font-bold text-amber-600">Warning (No Fine)</span>} />
                         ) : (
                             <>
                                 {getDaysOverdue(selectedTicket) > 0 && (
                                     <>
-                                        <Separator/>
                                         <DetailRow
                                             label="Days Overdue"
                                             value={<span className="text-destructive font-bold">{getDaysOverdue(selectedTicket)}</span>}
                                         />
+                                        <Separator/>
                                     </>
                                 )}
-                                <Separator/>
                                 <DetailRow label="Amount Due" value={`$${selectedTicket.amount.toFixed(2)}`} />
                            </>
                         )}
