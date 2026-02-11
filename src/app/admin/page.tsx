@@ -7,7 +7,7 @@ import { getAllUsers, getAllProperties, getTicketsForManager, getAllTickets } fr
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminTicketTable } from '@/components/admin-ticket-table';
 import { UserManagementTable } from '@/components/user-management-table';
-import { PropertyManagementTable } from '@/components/property-management-table';
+import { PropertyManagementTable, type PropertyWithRevenue } from '@/components/property-management-table';
 import { SubmitTicketForm } from '@/components/submit-ticket-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Ticket as TicketIcon, DollarSign, Building } from 'lucide-react';
@@ -17,6 +17,7 @@ import { AddUserDialog } from '@/components/add-user-dialog';
 import { AddPropertyDialog } from '@/components/add-property-dialog';
 import { PropertyAssignmentModal } from '@/components/property-assignment-modal';
 import { isAfter, subMonths, parseISO } from 'date-fns';
+import { EditPropertyDialog } from '@/components/edit-property-dialog';
 
 function SuperAdminDashboard() {
   const users = getAllUsers();
@@ -24,6 +25,7 @@ function SuperAdminDashboard() {
   const tickets = getAllTickets();
 
   const [selectedUserForAssignment, setSelectedUserForAssignment] = useState<User | null>(null);
+  const [propertyToEdit, setPropertyToEdit] = useState<PropertyWithRevenue | null>(null);
 
   const totalRevenue = tickets
     .filter((ticket) => ticket.status === 'Paid')
@@ -32,7 +34,7 @@ function SuperAdminDashboard() {
   const totalProperties = properties.length;
   
   const now = new Date();
-  const propertiesWithRevenue = properties.map((property) => {
+  const propertiesWithRevenue: PropertyWithRevenue[] = properties.map((property) => {
     const propertyTickets = tickets.filter(
       (ticket) => ticket.propertyId === property.id && ticket.status === 'Paid'
     );
@@ -57,6 +59,10 @@ function SuperAdminDashboard() {
     if (user.role === 'Manager') {
       setSelectedUserForAssignment(user);
     }
+  };
+
+  const handleEditProperty = (property: PropertyWithRevenue) => {
+    setPropertyToEdit(property);
   };
 
   return (
@@ -134,7 +140,7 @@ function SuperAdminDashboard() {
               <AddPropertyDialog />
             </CardHeader>
             <CardContent>
-              <PropertyManagementTable properties={propertiesWithRevenue} />
+              <PropertyManagementTable properties={propertiesWithRevenue} onEditProperty={handleEditProperty} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -144,6 +150,11 @@ function SuperAdminDashboard() {
         onOpenChange={(isOpen) => !isOpen && setSelectedUserForAssignment(null)}
         user={selectedUserForAssignment}
         properties={properties}
+      />
+      <EditPropertyDialog
+        isOpen={!!propertyToEdit}
+        onOpenChange={(isOpen) => !isOpen && setPropertyToEdit(null)}
+        property={propertyToEdit}
       />
     </>
   );

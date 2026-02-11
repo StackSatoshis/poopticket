@@ -12,7 +12,6 @@ import {
 import type { Property } from '@/lib/types';
 import { Button } from './ui/button';
 import { Edit, ChevronsUpDown } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import {
   Tooltip,
   TooltipContent,
@@ -30,7 +29,7 @@ const revenuePeriodLabels: Record<RevenuePeriod, string> = {
   '1y': '1Y Revenue',
 };
 
-type PropertyWithRevenue = Property & {
+export type PropertyWithRevenue = Property & {
   revenue: number;
   revenue1m: number;
   revenue3m: number;
@@ -40,10 +39,11 @@ type PropertyWithRevenue = Property & {
 
 export function PropertyManagementTable({
   properties,
+  onEditProperty,
 }: {
   properties: PropertyWithRevenue[];
+  onEditProperty: (property: PropertyWithRevenue) => void;
 }) {
-  const { toast } = useToast();
   const [currentPeriod, setCurrentPeriod] = React.useState<RevenuePeriod>('1m');
 
   const handleCyclePeriod = () => {
@@ -67,14 +67,9 @@ export function PropertyManagementTable({
     }
   };
 
-  const handleEditProperty = (e: React.MouseEvent, property: Property) => {
+  const handleEditProperty = (e: React.MouseEvent, property: PropertyWithRevenue) => {
     e.stopPropagation();
-    // In a real app, this would open an edit modal
-    console.log(`Editing property ${property.name}`);
-    toast({
-      title: 'Edit Not Implemented',
-      description: 'Editing properties will be available soon.',
-    });
+    onEditProperty(property);
   };
 
   return (
