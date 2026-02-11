@@ -21,7 +21,15 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-export function UserManagementTable({ users, properties }: { users: User[]; properties: Property[] }) {
+export function UserManagementTable({
+  users,
+  properties,
+  onEditAssignments,
+}: {
+  users: User[];
+  properties: Property[];
+  onEditAssignments: (user: User) => void;
+}) {
   const { toast } = useToast();
 
   const handlePasswordReset = (e: React.MouseEvent, user: User) => {
@@ -30,15 +38,6 @@ export function UserManagementTable({ users, properties }: { users: User[]; prop
     toast({
       title: 'Password Reset',
       description: `A password reset link has been sent to ${user.email}.`,
-    });
-  };
-
-  const handleEditAssignments = (e: React.MouseEvent, user: User) => {
-    e.stopPropagation();
-    console.log(`Editing assignments for ${user.email}`);
-    toast({
-      title: 'Edit Assignments',
-      description: `Opening modal to edit assignments for ${user.email}.`,
     });
   };
 
@@ -89,7 +88,10 @@ export function UserManagementTable({ users, properties }: { users: User[]; prop
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={(e) => handleEditAssignments(e, user)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditAssignments(user);
+                      }}
                       disabled={user.role !== 'Manager'}
                     >
                       <Edit className="h-4 w-4" />

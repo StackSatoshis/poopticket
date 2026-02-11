@@ -12,77 +12,98 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Ticket as TicketIcon, DollarSign, Building } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { AddUserDialog } from '@/components/add-user-dialog';
+import { PropertyAssignmentModal } from '@/components/property-assignment-modal';
 
 function SuperAdminDashboard() {
   const users = getAllUsers();
   const properties = getAllProperties();
   const tickets = getAllTickets();
 
+  const [selectedUserForAssignment, setSelectedUserForAssignment] = useState<User | null>(null);
+
   const totalRevenue = users.reduce((acc, user) => acc + user.revenueGenerated, 0);
   const totalTickets = tickets.length;
   const totalProperties = properties.length;
 
+  const handleEditAssignments = (user: User) => {
+    if (user.role === 'Manager') {
+      setSelectedUserForAssignment(user);
+    }
+  };
+
   return (
-    <Tabs defaultValue="dashboard" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-        <TabsTrigger value="users">User Management</TabsTrigger>
-      </TabsList>
-      <TabsContent value="dashboard">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 my-4">
+    <>
+      <Tabs defaultValue="dashboard" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="users">User Management</TabsTrigger>
+        </TabsList>
+        <TabsContent value="dashboard">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 my-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">from all properties</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Tickets</CardTitle>
+                <TicketIcon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+{totalTickets}</div>
+                <p className="text-xs text-muted-foreground">across all properties</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Managed Properties</CardTitle>
+                <Building className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalProperties}</div>
+                <p className="text-xs text-muted-foreground">in the system</p>
+              </CardContent>
+            </Card>
+          </div>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardHeader>
+              <CardTitle>All Tickets</CardTitle>
+              <CardDescription>A complete list of all citations in the system.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">from all properties</p>
+              <AdminTicketTable tickets={tickets} />
             </CardContent>
           </Card>
+        </TabsContent>
+        <TabsContent value="users">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tickets</CardTitle>
-              <TicketIcon className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>Manage users, roles, and property assignments.</CardDescription>
+              </div>
+              <AddUserDialog />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+{totalTickets}</div>
-              <p className="text-xs text-muted-foreground">across all properties</p>
+              <UserManagementTable users={users} properties={properties} onEditAssignments={handleEditAssignments} />
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Managed Properties</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalProperties}</div>
-              <p className="text-xs text-muted-foreground">in the system</p>
-            </CardContent>
-          </Card>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>All Tickets</CardTitle>
-            <CardDescription>A complete list of all citations in the system.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AdminTicketTable tickets={tickets} />
-          </CardContent>
-        </Card>
-      </TabsContent>
-      <TabsContent value="users">
-        <Card>
-          <CardHeader>
-            <CardTitle>User Management</CardTitle>
-            <CardDescription>Manage users, roles, and property assignments.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <UserManagementTable users={users} properties={properties} />
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
+        </TabsContent>
+      </Tabs>
+      <PropertyAssignmentModal
+        isOpen={!!selectedUserForAssignment}
+        onOpenChange={(isOpen) => !isOpen && setSelectedUserForAssignment(null)}
+        user={selectedUserForAssignment}
+        properties={properties}
+      />
+    </>
   );
 }
 
