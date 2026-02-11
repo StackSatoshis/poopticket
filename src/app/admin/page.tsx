@@ -178,7 +178,7 @@ function ManagerDashboard({ user }: { user: User }) {
             <CardDescription>
               Citations for your assigned properties: {properties.map((p) => p.name).join(', ')}.
             </CardDescription>
-          </IcardHeader>
+          </CardHeader>
           <CardContent>
             <AdminTicketTable tickets={tickets} />
           </CardContent>
